@@ -58,14 +58,14 @@ fun playRound(game: GameState, move: Move): Either<Fault, GameState> =
 fun validateMove(game: GameState, move: Move): Either<Fault, Unit> =
   getValue(game, move.tileNumber)?.let { Fault("err-invalid-move", FaultType.INVALID_INPUT).left() } ?: Unit.right()
 
-fun getValue(game: GameState, tileNumber: Int): Player? = allPositions(game.board)[tileNumber - 1]
+fun getValue(game: GameState, tileNumber: Int): Player? = game.board.getAllTiles()[tileNumber - 1]
 
 fun getNoOfMovesLeft(game: GameState): Int =
-  9 - allPositions(game.board).fold(0) { acc, elm -> elm?.let { acc + 1 } ?: acc }
+  9 - game.board.getAllTiles().fold(0) { acc, elm -> elm?.let { acc + 1 } ?: acc }
 
 fun checkForTheWinner(game: GameState): Boolean =
-  endGameCheckExecutionSequence.fold(false) { acc, block ->
-    acc or block(game.board).all { it != null && it == game.player }
-  }
+  game.board
+    .getEndGameValidatorSequence()
+    .fold(false) { acc, tileSet -> acc or tileSet.all { it != null && it == game.player } }
 
 fun updateBoard(board: BoardState, move: Move): BoardState = TODO()

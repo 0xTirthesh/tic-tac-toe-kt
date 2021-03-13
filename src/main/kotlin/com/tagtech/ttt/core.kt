@@ -1,25 +1,15 @@
 package com.tagtech.ttt
 
-import arrow.core.Tuple3
+import arrow.core.Tuple9
 
 val EMPTY_MAP = mapOf<String, Any>()
+val EMPTY_BOARD: BoardState = Tuple9(null, null, null, null, null, null, null, null, null)
 
-sealed class Player {}
-
+sealed class Player
 object Cross : Player()
 object Ohh : Player()
 
-enum class Index(val idx: Int) {
-  One(1),
-  Two(2),
-  Three(3)
-}
-
-typealias Row = Tuple3<Player?, Player?, Player?>
-typealias BoardState = Tuple3<Row, Row, Row>
-typealias Position = Pair<Index, Index>
-
-typealias TileSet = (BoardState) -> List<Player?>
+typealias BoardState = Tuple9<Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?>
 
 enum class FaultType {
   SYSTEM,
@@ -42,8 +32,9 @@ enum class EventType {
 }
 
 data class Event(val eventType: EventType, val move: Move?, val winner: Player?)
+
 data class GameState(
-  val board: BoardState = emptyBoard,
+  val board: BoardState = EMPTY_BOARD,
   val player: Player = Cross,
   val ended: Boolean = false,
   val winner: Player? = null,
@@ -52,30 +43,16 @@ data class GameState(
 
 data class Move(val tileNumber: Int, val player: Player)
 
-val emptyBoard: BoardState = Tuple3(
-  Tuple3(null, null, null),
-  Tuple3(null, null, null),
-  Tuple3(null, null, null)
-)
+fun BoardState.getEndGameValidatorSequence() =
+  listOf(
+    listOf(a, b, c), // row 1
+    listOf(d, e, f), // row 2
+    listOf(g, h, i), // row 3
+    listOf(a, d, g), // column 1
+    listOf(b, e, h), // column 2
+    listOf(c, f, i), // column 3
+    listOf(a, e, i), // diagonal 1
+    listOf(c, e, g), // diagonal 2
+  )
 
-val slots = sequence {
-  Index.values().forEach { rowPos ->
-    Index.values().forEach { colPos ->
-      yield(Position(rowPos, colPos))
-    }
-  }
-}
-
-private val ROW_1: TileSet = { listOf(it.a.a, it.a.b, it.a.c) }
-private val ROW_2: TileSet = { listOf(it.b.a, it.b.b, it.b.c) }
-private val ROW_3: TileSet = { listOf(it.c.a, it.c.b, it.c.c) }
-
-private val COL_1: TileSet = { listOf(it.a.a, it.b.a, it.c.a) }
-private val COL_2: TileSet = { listOf(it.a.b, it.b.b, it.c.b) }
-private val COL_3: TileSet = { listOf(it.a.c, it.b.c, it.c.c) }
-
-private val DIAG_1: TileSet = { listOf(it.a.a, it.b.b, it.c.c) }
-private val DIAG_2: TileSet = { listOf(it.a.c, it.b.b, it.c.a) }
-
-val endGameCheckExecutionSequence = listOf(ROW_1, ROW_2, ROW_3, COL_1, COL_2, COL_3, DIAG_1, DIAG_2)
-val allPositions: TileSet = { listOf(it.a.a, it.a.b, it.a.c, it.b.a, it.b.b, it.b.c, it.c.a, it.c.b, it.c.c) }
+fun BoardState.getAllTiles() = listOf(a, b, c, d, e, f, g, h, i)

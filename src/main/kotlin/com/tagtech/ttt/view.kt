@@ -11,10 +11,10 @@ val reader = Scanner(System.`in`)
 const val CROSS = "❌"
 const val OHH = "⭕"
 
-val DEFAULT_TILES = listOf("1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣")
+val DEFAULT_TILES = listOf(" 1 ", " 2 ", " 3 ", " 4 ", " 5 ", " 6 ", " 7 ", " 8 ", " 9 ")
 
 fun displayWelcomeMessage(): Unit {
-  """
+  val message = """
     Welcome! Let's Play `TicTacToe`
 
     Rules:
@@ -22,10 +22,13 @@ fun displayWelcomeMessage(): Unit {
      - Player will have to choose the number from the board they wish to mark.
      - The first player to get 3 of their marks in a row (up, down, across, or diagonally) is the winner.
      - When all 9 squares are full, the game is over.
+
   """.trimIndent()
+
+  println(message)
 }
 
-fun promptInput(message: String): String = print(">> ${message}: ").let { reader.next() }
+fun promptInput(message: String): String = print("|- ${message}: ").let { reader.next() }
 
 fun getPlayerName(game: GameState): String =
   when (game.player) {
@@ -36,11 +39,14 @@ fun getPlayerName(game: GameState): String =
 fun displayBoard(game: GameState) =
   println(
     """
-    ${getDisplayValue(game, 1)}  ${getDisplayValue(game, 2)}  ${getDisplayValue(game, 3)}
+      Board:
 
-    ${getDisplayValue(game, 4)}  ${getDisplayValue(game, 5)}  ${getDisplayValue(game, 6)}
+        ${getDisplayValue(game, 1)}  ${getDisplayValue(game, 2)}  ${getDisplayValue(game, 3)}
 
-    ${getDisplayValue(game, 7)}  ${getDisplayValue(game, 8)}  ${getDisplayValue(game, 9)}
+        ${getDisplayValue(game, 4)}  ${getDisplayValue(game, 5)}  ${getDisplayValue(game, 6)}
+
+        ${getDisplayValue(game, 7)}  ${getDisplayValue(game, 8)}  ${getDisplayValue(game, 9)}
+
     """.trimIndent()
   )
 
@@ -50,20 +56,6 @@ fun getSymbol(player: Player) =
   when (player) {
     is Cross -> CROSS
     is Ohh -> OHH
-  }
-
-private fun tileNumberToPosition(input: Int): Position? =
-  when (input) {
-    1 -> Pair(Index.One, Index.One)
-    2 -> Pair(Index.One, Index.Two)
-    3 -> Pair(Index.One, Index.Three)
-    4 -> Pair(Index.Two, Index.One)
-    5 -> Pair(Index.Two, Index.Two)
-    6 -> Pair(Index.Two, Index.Three)
-    7 -> Pair(Index.Three, Index.One)
-    8 -> Pair(Index.Three, Index.Two)
-    9 -> Pair(Index.Three, Index.Three)
-    else -> null
   }
 
 fun parseInput(game: GameState, input: String): Either<Fault, Move> =
