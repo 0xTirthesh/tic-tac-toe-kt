@@ -8,8 +8,8 @@ import java.util.*
 
 val reader = Scanner(System.`in`)
 
-const val CROSS = "❌"
-const val OHH = "⭕"
+const val CROSS = " ❌ "
+const val OHH = " ⭕ "
 
 val DEFAULT_TILES = listOf(" 1 ", " 2 ", " 3 ", " 4 ", " 5 ", " 6 ", " 7 ", " 8 ", " 9 ")
 
@@ -30,33 +30,40 @@ fun displayWelcomeMessage(): Unit {
 
 fun promptInput(message: String): String = print("|- ${message}: ").let { reader.next() }
 
-fun getPlayerName(game: GameState): String =
-  when (game.player) {
+fun Player.getName(): String =
+  when (this) {
     is Cross -> "Player 1"
     is Ohh -> "Player 2"
+  }
+
+fun Player.getSymbol() =
+  when (this) {
+    is Cross -> CROSS
+    is Ohh -> OHH
   }
 
 fun displayBoard(game: GameState) =
   println(
     """
+
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       Board:
+          ${getDisplayValue(game, 1)}  ${getDisplayValue(game, 2)}  ${getDisplayValue(game, 3)}
 
-        ${getDisplayValue(game, 1)}  ${getDisplayValue(game, 2)}  ${getDisplayValue(game, 3)}
+          ${getDisplayValue(game, 4)}  ${getDisplayValue(game, 5)}  ${getDisplayValue(game, 6)}
 
-        ${getDisplayValue(game, 4)}  ${getDisplayValue(game, 5)}  ${getDisplayValue(game, 6)}
-
-        ${getDisplayValue(game, 7)}  ${getDisplayValue(game, 8)}  ${getDisplayValue(game, 9)}
+          ${getDisplayValue(game, 7)}  ${getDisplayValue(game, 8)}  ${getDisplayValue(game, 9)}
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     """.trimIndent()
   )
 
-fun declareWinner(): Unit = TODO()
-
-fun getSymbol(player: Player) =
-  when (player) {
-    is Cross -> CROSS
-    is Ohh -> OHH
-  }
+fun displayWinner(game: GameState): Either<Fault, Unit> =
+  if (game.ended) {
+    displayBoard(game)
+    val msg = if (game.winner != null) "${game.winner.getName()} won the game! Congratulations!" else "It's a Tie!"
+    println("\n--------------------------------\nMatch Result: ${msg}\n--------------------------------\n").right()
+  } else Fault("err-cannot-display-winner-game-not-ended-yet", FaultType.SYSTEM).left()
 
 fun parseInput(game: GameState, input: String): Either<Fault, Move> =
   if (input.isNotEmpty() and input.isNotBlank()) {
@@ -85,5 +92,12 @@ fun playTurn(game: GameState, input: String): GameState {
 }
 
 fun getDisplayValue(game: GameState, tileNumber: Int): String =
-  getValue(game = game, tileNumber)?.let { getSymbol(it) } ?: DEFAULT_TILES[tileNumber - 1]
+  getValue(game = game, tileNumber)?.getSymbol() ?: DEFAULT_TILES[tileNumber - 1]
 
+fun Event.print() {
+  val message = "Type: ${type}"
+    .let { if (move != null) it + " | ${move}" else it }
+    .let { if (winner != null) it + " | ${winner.getName()} (${winner.getSymbol()}) is the winner!" else it }
+
+  println(message)
+}

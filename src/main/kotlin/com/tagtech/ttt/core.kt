@@ -31,7 +31,7 @@ enum class EventType {
   GAME_END
 }
 
-data class Event(val eventType: EventType, val move: Move?, val winner: Player?)
+data class Event(val type: EventType, val move: Move?, val winner: Player?)
 
 data class GameState(
   val board: BoardState = EMPTY_BOARD,
@@ -41,7 +41,10 @@ data class GameState(
   val _events: List<Event> = listOf(),
 )
 
-data class Move(val tileNumber: Int, val player: Player)
+data class Move(val tileNumber: Int, val player: Player) {
+
+  override fun toString() = "${player.getName()} marked tile #${tileNumber} with ${player.getSymbol()}"
+}
 
 fun BoardState.getEndGameValidatorSequence() =
   listOf(
