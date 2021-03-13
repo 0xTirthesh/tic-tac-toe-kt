@@ -93,11 +93,3 @@ fun playTurn(game: GameState, input: String): GameState {
 
 fun getDisplayValue(game: GameState, tileNumber: Int): String =
   getValue(game = game, tileNumber)?.getSymbol() ?: DEFAULT_TILES[tileNumber - 1]
-
-fun Event.print() {
-  val message = "Type: ${type}"
-    .let { if (move != null) it + " | ${move}" else it }
-    .let { if (winner != null) it + " | ${winner.getName()} (${winner.getSymbol()}) is the winner!" else it }
-
-  println(message)
-}

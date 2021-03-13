@@ -31,7 +31,14 @@ enum class EventType {
   GAME_END
 }
 
-data class Event(val type: EventType, val move: Move?, val winner: Player?)
+data class Event(val type: EventType, val move: Move?, val winner: Player?) {
+
+  override fun toString(): String =
+    " - ${type}"
+      .let { if (move != null) it + " | ${move}" else it }
+      .let { if (winner != null) it + " | ${winner.getName()} (${winner.getSymbol()}) is the winner!" else it }
+
+}
 
 data class GameState(
   val board: BoardState = EMPTY_BOARD,
@@ -39,7 +46,22 @@ data class GameState(
   val ended: Boolean = false,
   val winner: Player? = null,
   val _events: List<Event> = listOf(),
-)
+) {
+
+  override fun toString(): String =
+    """
+
+      Game State:
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Board: ${board}
+      Winner: ${winner?.getName() ?: "-"}
+      Ended: ${if (ended) "Yes" else "No"}
+      Events:
+        ${_events.joinToString(separator = "\n")}
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    """.trimIndent()
+}
 
 data class Move(val tileNumber: Int, val player: Player) {
 
