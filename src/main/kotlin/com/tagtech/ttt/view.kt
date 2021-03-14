@@ -27,7 +27,7 @@ private fun parseInput(input: String): Either<Fault, Int> =
 private fun GameState.getDisplayValue(tileNumber: Int): String =
   getPlayerAtTile(this, tileNumber)?.getSymbol() ?: " ${tileNumber} "
 
-private fun GameState.displayBoard() =
+fun GameState.displayBoard() =
   println(
     """
 
@@ -57,12 +57,15 @@ private fun GameState.displayWinner(): Either<Fault, Unit> =
  * in the case of failure; it will retry (until successful)
  */
 private fun GameState.processInputAndExecuteTurn(input: String): GameState =
-  parseInput(input).flatMap { executeTurn(this, it) }
+  parseInput(input)
+    .flatMap {
+      executeTurn(this, it) { m -> println("\n>>> Computer played selected tile number #${m.tileNumber} <<<") }
+    }
     .fold({ processInputAndExecuteTurn(promptInput("Err! Invalid Input. Please re-enter valid input")) }, { it })
 
 private fun GameState.nextTurn(): GameState {
   displayBoard()
-  println(">>> ${player.getName()}'s Turn <<<")
+  println("\n>>> ${player.getName()}'s Turn <<<")
   val input = promptInput("Please enter value from 1-9 as per the availability on the board")
   return processInputAndExecuteTurn(input)
 }

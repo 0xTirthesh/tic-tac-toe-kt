@@ -12,14 +12,14 @@ class TestUtils {
 
   @Test
   fun testValidateMovePositive() {
-    val game = initGame(playingAgainstComputer = false)
+    val game = initGame(vsComputer = false, computerPlaysRandom = null)
     val result = executeTurn(game, 5)
     assertTrue(result.isRight())
   }
 
   @Test
   fun testValidateMoveNegative() {
-    val game = initGame(playingAgainstComputer = false)
+    val game = initGame(vsComputer = false, computerPlaysRandom = null)
     val result = executeTurn(game, 10)
     assertTrue(result.isLeft())
   }

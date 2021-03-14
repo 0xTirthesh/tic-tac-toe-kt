@@ -17,8 +17,9 @@ fun main(args: Array<String>) {
   )
 
   val vsComputer = args.isNotEmpty() && (args[0]).lowercase() == "play-vs-computer"
+  val computerPlaysRandom = vsComputer && args.size > 1 && (args[1]).lowercase() != "hard"
 
-  initGame(vsComputer)
+  initGame(vsComputer, computerPlaysRandom)
     .apply { println(this) }
     .start()
     .fold({ println("Game Execution Failed. Message: ${it.message} | ErrType: ${it.type}") }) { println(it) }

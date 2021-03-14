@@ -1,39 +1,51 @@
 package com.tagtech.ttt
 
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class TestComputerPlay {
-  companion object {
 
-    private val log = LoggerFactory.getLogger(TestComputerPlay::class.java)
-  }
-
-  private fun playAgainstComputer(game: GameState, playerTileSelection: Int, expectedTilesLeft: Int = 7): GameState =
+  private fun playAgainstComputer(game: GameState, playerTileSelection: Int): GameState =
     executeTurn(game, playerTileSelection)
       .fold({ fail("Err! Unexpected Error") }) {
         if (it.ended) it
         else {
-          val nextSelection = getAvailableTiles(it).apply { assertEquals(expectedTilesLeft, size) }.random()
-          playAgainstComputer(it, nextSelection, expectedTilesLeft - 2)
+          val nextSelection = getAvailableTiles(it).random()
+          playAgainstComputer(it, nextSelection)
         }
       }
 
   @Test
   fun testRandomPlayWithComputer() {
-    (1..100).forEach {
-      println("\n--------------- #${it} ---------------\n")
-      val newGame = initGame(playingAgainstComputer = true)
-      getAvailableTiles(newGame).apply { assertEquals(9, size) }
-      playAgainstComputer(newGame, 1).apply { assertTrue(ended) }.let(::println)
+    val noOfIterations = 100
+    val result = listOf(true, false).map { computerPlaysRandom ->
+      var totalWins = 0
+      (1..noOfIterations).forEach {
+        println("\n--------------- #${it} ---------------\n")
+        val newGame = initGame(vsComputer = true, computerPlaysRandom = computerPlaysRandom)
+        getAvailableTiles(newGame).apply { assertEquals(9, size) }
+        playAgainstComputer(newGame, (1..9).random()).apply { assertTrue(ended) }
+          .apply { if (this.winner == PlayerOhh) totalWins += 1 }
+          .let(::println)
+      }
+      totalWins
     }
+
+    println(
+      """
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Total Computer Wins (of ${noOfIterations} iterations):
+         - Random: ${result[0]}
+         - Smart: ${result[1]}
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    """.trimIndent()
+    )
   }
 
   @Test
-  fun testComputerMove() {
+  fun testComputerMoveForBlocking() {
     val cases =
       listOf(
         BoardState(PlayerCross, PlayerCross, null, null, null, null, null, null, null) to 3, // row
@@ -42,8 +54,8 @@ class TestComputerPlay {
         BoardState(PlayerCross, null, null, null, PlayerCross, null, null, null, null) to 9, // diagonal
       )
     cases.forEach {
-      val newGame = GameState(board = it.first)
-      assertEquals(it.second, getTileWhichBlocksPlayersWin(newGame))
+      val newGame = GameState(board = it.first, vsComputer = false, computerPlaysRandom = null)
+      assertEquals(it.second, getCriticalTile(newGame, PlayerCross))
     }
   }
 }

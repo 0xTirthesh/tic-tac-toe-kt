@@ -21,7 +21,7 @@ class TestStateUpdates {
 
   @Test
   fun testMakeMove() {
-    val game = initGame(playingAgainstComputer = false)
+    val game = initGame(vsComputer = false, computerPlaysRandom = null)
     assertEquals(1, game._events.size)
 
     val move = Move(1, PlayerCross)
@@ -34,6 +34,7 @@ class TestStateUpdates {
     val expectedGame = GameState(
       board = BoardState(PlayerCross, null, null, null, null, null, null, null, null),
       vsComputer = false,
+      computerPlaysRandom = null,
       player = PlayerCross,
       _events = listOf(
         Event(EventType.INIT, null, null),
@@ -46,7 +47,7 @@ class TestStateUpdates {
 
   @Test
   fun testPlayRound() {
-    val game = initGame(playingAgainstComputer = false)
+    val game = initGame(vsComputer = false, computerPlaysRandom = null)
     val move = Move(5, PlayerCross)
     val result = executeTurn(game, move.tileNumber)
     assertTrue(result.isRight(), "Unexpected Fault Encountered")
@@ -60,6 +61,7 @@ class TestStateUpdates {
       val expectedGame = GameState(
         board = BoardState(null, null, null, null, PlayerCross, null, null, null, null),
         vsComputer = false,
+        computerPlaysRandom = null,
         player = PlayerOhh,
         _events = listOf(
           Event(EventType.INIT, null, null),
@@ -74,7 +76,7 @@ class TestStateUpdates {
 
   @Test
   fun testSwitchPlayer() {
-    val game = initGame(playingAgainstComputer = false)
+    val game = initGame(vsComputer = false, computerPlaysRandom = null)
     val updatedGame = switchPlayer(game)
 
     assertEquals(2, updatedGame._events.size)
@@ -84,6 +86,7 @@ class TestStateUpdates {
     val expectedGame = GameState(
       board = BoardState(null, null, null, null, null, null, null, null, null),
       vsComputer = false,
+      computerPlaysRandom = null,
       player = PlayerOhh,
       _events = listOf(
         Event(EventType.INIT, null, null),
@@ -99,6 +102,7 @@ class TestStateUpdates {
     val game = GameState(
       board = BoardState(PlayerOhh, PlayerCross, PlayerOhh, PlayerCross, PlayerOhh, PlayerCross, PlayerOhh, null, null),
       vsComputer = false,
+      computerPlaysRandom = null,
     )
 
     assertEquals(PlayerOhh, getPlayerAtTile(game, 1))
@@ -114,7 +118,7 @@ class TestStateUpdates {
 
   @Test
   fun testValidation() {
-    val game = initGame(playingAgainstComputer = false)
+    val game = initGame(vsComputer = false, computerPlaysRandom = null)
     val updatedGame = executeTurn(game, 1)
 
     updatedGame.fold({ fail("Err! ${it.message}") }) {

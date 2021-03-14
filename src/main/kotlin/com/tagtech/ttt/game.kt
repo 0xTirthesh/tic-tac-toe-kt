@@ -13,8 +13,8 @@ private val log = LoggerFactory.getLogger("TicTacToe")
 
 // --- events ---
 
-fun initGame(playingAgainstComputer: Boolean): GameState {
-  val game = GameState(vsComputer = playingAgainstComputer)
+fun initGame(vsComputer: Boolean, computerPlaysRandom: Boolean?): GameState {
+  val game = GameState(vsComputer = vsComputer, computerPlaysRandom = computerPlaysRandom)
 
   val events = game._events.toMutableList()
   events.add(Event(EventType.INIT, null, null))
@@ -39,10 +39,13 @@ fun makeMove(game: GameState, move: Move): GameState {
   return game.copy(board = newBoard, _events = events)
 }
 
-fun playComputerTurn(game: GameState): GameState {
-  val move = getComputerMove(game)
-  log.debug("Executing Computers' Turn; Selected Tile: ${move.tileNumber}")
+fun playComputerTurn(game: GameState, postComputersTurn: ((Move) -> Unit)?): GameState {
+  val move = if (game.computerPlaysRandom == true) getComputerRandomMove(game) else getComputerSmartMove(game)
+   // log.debug("Executing Computers' Turn; Selected Tile: ${move.tileNumber}")
+
   val newBoard = updateBoard(game.board, move)!! // could lead to a runtime err.. impl `Either`
+    .apply { if (postComputersTurn != null) postComputersTurn(move) }
+
   val events = game._events.toMutableList()
   events.add(Event(EventType.UPDATE_BOARD, move, null))
   return game.copy(board = newBoard, _events = events)
@@ -57,13 +60,20 @@ fun endGame(game: GameState, isTie: Boolean): GameState {
 
 // --- executor ---
 
-fun executeTurn(game: GameState, inputTileSelection: Int): Either<Fault, GameState> =
+fun executeTurn(
+  game: GameState,
+  inputTileSelection: Int,
+  postComputersTurn: ((Move) -> Unit)? = null
+): Either<Fault, GameState> =
   either.eager {
-    log.debug("Executing Players' Turn; Selected Tile: ${inputTileSelection}")
+    // log.debug("Executing Players' Turn; Selected Tile: ${inputTileSelection}")
     validateInput(game, inputTileSelection).bind()
     makeMove(game, Move(inputTileSelection, game.player))
       .let { endGameOrSwitchUser(it) }
-      .let { if (!it.ended && it.vsComputer) playComputerTurn(it).let { g -> endGameOrSwitchUser(g) } else it }
+      .let {
+        if (!it.ended && it.vsComputer) playComputerTurn(it, postComputersTurn)
+          .let { g -> endGameOrSwitchUser(g) } else it
+      }
   }
 
 // --- utils ---
@@ -108,34 +118,36 @@ fun endGameOrSwitchUser(game: GameState) =
 
 fun getAvailableTiles(game: GameState): List<Int> =
   game.board
-    .apply { log.debug(this.toString()) }
+    // .apply { log.debug(this.toString()) }
     .getAllTiles().withIndex().filter { it.value == null }.map { it.index + 1 }
-    .apply { log.debug(this.toString()) }
+    // .apply { log.debug(this.toString()) }
 
-fun getTileWhichBlocksPlayersWin(game: GameState): Int? =
+fun getCriticalTile(game: GameState, player: Player): Int? =
   game.board.getEndGameValidatorSequence().let { combinations ->
     val winningCombinations =
-      combinations.withIndex().filter { Collections.frequency(it.value, PlayerCross) == 2 }.map { it.index }
+      combinations.withIndex()
+        .filter { Collections.frequency(it.value, player) == 2 && Collections.frequency(it.value, null) == 1 }
+        .map { it.index }
 
     if (winningCombinations.isNotEmpty()) {
       val winningCombination = winningCombinations.first()
-        .apply { log.debug("Player might win at: ${WINNING_COMBINATIONS[this].first}") }
+        // .apply { log.debug("Player might win at: ${WINNING_COMBINATIONS[this].first}") }
 
       winningCombination.let { combinations[it] }
-        .withIndex().filter { it.value == null }.map { it.index }.first()
+        .withIndex().filter { it.value == null }.map { it.index }
+        .first()
         .let { WINNING_COMBINATIONS[winningCombination].second[it] }
 
     } else null
   }
 
-fun getComputerMove(game: GameState): Move {
+fun getComputerSmartMove(game: GameState): Move {
+  val tileSelection =
+    getCriticalTile(game, PlayerOhh) // try to win
+      ?: getCriticalTile(game, PlayerCross)  // try to block
+      ?: getAvailableTiles(game).random() // play random; could be optimized (like select 5)
 
-  // optimization
-
-  // select tile such that that player get blocked
-  // select tile such that that computer get
-  // find
-
-  return Move(getAvailableTiles(game).random(), game.player)
+  return Move(tileSelection, game.player)
 }
 
+fun getComputerRandomMove(game: GameState): Move = Move(getAvailableTiles(game).random(), game.player)
