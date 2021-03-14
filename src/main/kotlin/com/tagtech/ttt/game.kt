@@ -7,6 +7,7 @@ import arrow.core.computations.either
 import arrow.core.left
 import arrow.core.right
 import org.slf4j.LoggerFactory
+import java.util.*
 
 private val log = LoggerFactory.getLogger("TicTacToe")
 
@@ -111,5 +112,30 @@ fun getAvailableTiles(game: GameState): List<Int> =
     .getAllTiles().withIndex().filter { it.value == null }.map { it.index + 1 }
     .apply { log.debug(this.toString()) }
 
-fun getComputerMove(game: GameState): Move = Move(getAvailableTiles(game).random(), game.player)
+fun getTileWhichBlocksPlayersWin(game: GameState): Int? =
+  game.board.getEndGameValidatorSequence().let { combinations ->
+    val winningCombinations =
+      combinations.withIndex().filter { Collections.frequency(it.value, PlayerCross) == 2 }.map { it.index }
+
+    if (winningCombinations.isNotEmpty()) {
+      val winningCombination = winningCombinations.first()
+        .apply { log.debug("Player might win at: ${WINNING_COMBINATIONS[this].first}") }
+
+      winningCombination.let { combinations[it] }
+        .withIndex().filter { it.value == null }.map { it.index }.first()
+        .let { WINNING_COMBINATIONS[winningCombination].second[it] }
+
+    } else null
+  }
+
+fun getComputerMove(game: GameState): Move {
+
+  // optimization
+
+  // select tile such that that player get blocked
+  // select tile such that that computer get
+  // find
+
+  return Move(getAvailableTiles(game).random(), game.player)
+}
 

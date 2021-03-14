@@ -15,7 +15,6 @@ Where two players ('x' and 'o') compete with each other to win the game.
 - Board: tracking the 'tiles' at position and checking end of the game
 - Player: tracking whose turn it is?
 
-
 ## How does the game end?
 
 - Either all moves are exhausted which results into a 'tie'
@@ -29,3 +28,12 @@ Where two players ('x' and 'o') compete with each other to win the game.
 - Position: coordinate of a tile on the board represented as (index, index)
 - Move: In the player's turn, he/she choose a position to claim
 
+## Play
+
+- To play against a player just execute the jar
+- To play against a player execute the jar with additional arg to the command, i.e., `play-vs-computer`
+
+## Assumptions:
+
+- Game Play: the first player is always ❌ v/s the second player is always ⭕
+- Player v/s Computer: always player will play first

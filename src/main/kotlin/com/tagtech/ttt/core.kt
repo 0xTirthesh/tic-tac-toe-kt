@@ -67,7 +67,7 @@ data class Event(val type: EventType, val move: Move?, val winner: Player?) {
 
 data class GameState(
   val board: BoardState = EMPTY_BOARD,
-  val vsComputer: Boolean,
+  val vsComputer: Boolean = false,
   val player: Player = PlayerCross,
   val ended: Boolean = false,
   val winner: Player? = null,
@@ -117,3 +117,13 @@ fun BoardState.getEndGameValidatorSequence() =
 
 fun BoardState.getAllTiles() = listOf(a, b, c, d, e, f, g, h, i)
 
+val WINNING_COMBINATIONS = listOf(
+  "R1" to listOf(1, 2, 3),
+  "R2" to listOf(4, 5, 6),
+  "R3" to listOf(7, 8, 9),
+  "C1" to listOf(1, 4, 7),
+  "C2" to listOf(2, 5, 6),
+  "C3" to listOf(7, 8, 9),
+  "D1" to listOf(1, 5, 9),
+  "D2" to listOf(3, 5, 7)
+)

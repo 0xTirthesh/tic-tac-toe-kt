@@ -23,12 +23,27 @@ class TestComputerPlay {
       }
 
   @Test
-  fun testGameWinner() {
+  fun testRandomPlayWithComputer() {
     (1..100).forEach {
       println("\n--------------- #${it} ---------------\n")
       val newGame = initGame(playingAgainstComputer = true)
       getAvailableTiles(newGame).apply { assertEquals(9, size) }
       playAgainstComputer(newGame, 1).apply { assertTrue(ended) }.let(::println)
+    }
+  }
+
+  @Test
+  fun testComputerMove() {
+    val cases =
+      listOf(
+        BoardState(PlayerCross, PlayerCross, null, null, null, null, null, null, null) to 3, // row
+        BoardState(PlayerCross, null, PlayerCross, null, null, null, null, null, null) to 2, // row with middle missing
+        BoardState(PlayerCross, null, null, PlayerCross, null, null, null, null, null) to 7, // column
+        BoardState(PlayerCross, null, null, null, PlayerCross, null, null, null, null) to 9, // diagonal
+      )
+    cases.forEach {
+      val newGame = GameState(board = it.first)
+      assertEquals(it.second, getTileWhichBlocksPlayersWin(newGame))
     }
   }
 }
