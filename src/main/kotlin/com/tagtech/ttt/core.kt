@@ -5,11 +5,25 @@ import arrow.core.Tuple9
 val EMPTY_MAP = mapOf<String, Any>()
 val EMPTY_BOARD: BoardState = Tuple9(null, null, null, null, null, null, null, null, null)
 
-sealed class Player
-object Cross : Player()
-object Ohh : Player()
+sealed class Player {
 
-typealias BoardState = Tuple9<Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?>
+  override fun toString(): String = getSymbol()
+
+  fun getSymbol() =
+    when (this) {
+      is PlayerCross -> " ❌ "
+      is PlayerOhh -> " ⭕ "
+    }
+}
+
+object PlayerCross : Player()
+object PlayerOhh : Player()
+
+fun Player.getName() =
+  when (this) {
+    is PlayerCross -> "Player 1"
+    is PlayerOhh -> "Player 2"
+  }
 
 enum class FaultType {
   SYSTEM,
@@ -31,17 +45,44 @@ enum class EventType {
   GAME_END
 }
 
-data class Event(val eventType: EventType, val move: Move?, val winner: Player?)
+data class Event(val type: EventType, val move: Move?, val winner: Player?) {
+
+  override fun toString(): String =
+    " - ${type}"
+      .let { if (move != null) it + " | ${move}" else it }
+      .let { if (winner != null) it + " | ${winner.getName()} (${winner.getSymbol()}) is the winner!" else it }
+
+}
 
 data class GameState(
   val board: BoardState = EMPTY_BOARD,
-  val player: Player = Cross,
+  val player: Player = PlayerCross,
   val ended: Boolean = false,
   val winner: Player? = null,
   val _events: List<Event> = listOf(),
-)
+) {
 
-data class Move(val tileNumber: Int, val player: Player)
+  override fun toString(): String =
+    """
+    Game State:
+    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Board: ${board}
+    Current Player: ${player}
+    Winner: ${winner?.getName() ?: "-"}
+    Ended: ${if (ended) "Yes" else "No"}
+    Events:
+    ${_events.joinToString(separator = "\n\t")}
+    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    """
+}
+
+data class Move(val tileNumber: Int, val player: Player) {
+
+  override fun toString() = "'${player.getName()}' marked tile #${tileNumber} with ${player.getSymbol()}"
+}
+
+typealias BoardState = Tuple9<Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?>
 
 fun BoardState.getEndGameValidatorSequence() =
   listOf(

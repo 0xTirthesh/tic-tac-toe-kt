@@ -2,88 +2,78 @@ package com.tagtech.ttt
 
 import arrow.core.Either
 import arrow.core.computations.either
+import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import java.util.*
 
 val reader = Scanner(System.`in`)
 
-const val CROSS = "❌"
-const val OHH = "⭕"
+// --- User Input ---
 
-val DEFAULT_TILES = listOf(" 1 ", " 2 ", " 3 ", " 4 ", " 5 ", " 6 ", " 7 ", " 8 ", " 9 ")
+private fun promptInput(message: String): String = print("|- ${message}: ").let { reader.next() }
 
-fun displayWelcomeMessage(): Unit {
-  val message = """
-    Welcome! Let's Play `TicTacToe`
-
-    Rules:
-     - Game will prompt for the player's turn. Player 1 marks '{CROSS}' and Player 2 marks '{OH}'
-     - Player will have to choose the number from the board they wish to mark.
-     - The first player to get 3 of their marks in a row (up, down, across, or diagonally) is the winner.
-     - When all 9 squares are full, the game is over.
-
-  """.trimIndent()
-
-  println(message)
-}
-
-fun promptInput(message: String): String = print("|- ${message}: ").let { reader.next() }
-
-fun getPlayerName(game: GameState): String =
-  when (game.player) {
-    is Cross -> "Player 1"
-    is Ohh -> "Player 2"
-  }
-
-fun displayBoard(game: GameState) =
-  println(
-    """
-      Board:
-
-        ${getDisplayValue(game, 1)}  ${getDisplayValue(game, 2)}  ${getDisplayValue(game, 3)}
-
-        ${getDisplayValue(game, 4)}  ${getDisplayValue(game, 5)}  ${getDisplayValue(game, 6)}
-
-        ${getDisplayValue(game, 7)}  ${getDisplayValue(game, 8)}  ${getDisplayValue(game, 9)}
-
-    """.trimIndent()
-  )
-
-fun declareWinner(): Unit = TODO()
-
-fun getSymbol(player: Player) =
-  when (player) {
-    is Cross -> CROSS
-    is Ohh -> OHH
-  }
-
-fun parseInput(game: GameState, input: String): Either<Fault, Move> =
+private fun parseInput(input: String): Either<Fault, Int> =
   if (input.isNotEmpty() and input.isNotBlank()) {
     try {
-      val tileNumber = input.toInt()
-      if (tileNumber in 1..9) Move(tileNumber, game.player).right()
-      else Fault("err-tile-selected", FaultType.INVALID_INPUT, mapOf("expectation" to "a digit; range: 1-9")).left()
+      input.toInt().right()
     } catch (e: Exception) {
       Fault("err-invalid-input", FaultType.INVALID_INPUT, mapOf("expectation" to "a digit; range: 1-9")).left()
     }
   } else Fault("err-input-is-mandatory", FaultType.INVALID_INPUT).left()
 
-fun onUserInputErr(game: GameState): (Fault) -> GameState =
-  {
-    val newInput = promptInput("Err! Invalid Input. Please re-enter valid input")
-    playTurn(game, newInput)
-  }
+// --- GameState ---
 
-fun playTurn(game: GameState, input: String): GameState {
-  val result: Either<Fault, GameState> = either.eager {
-    val move = parseInput(game, input).bind()
-    playRound(game, move).bind()
-  }
+private fun GameState.getDisplayValue(tileNumber: Int): String =
+  getPlayerAtTile(tileNumber)?.getSymbol() ?: " ${tileNumber} "
 
-  return result.fold(onUserInputErr(game), { it })
+private fun GameState.displayBoard() =
+  println(
+    """
+
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      Board:
+          ${getDisplayValue(1)}   ${getDisplayValue(2)}   ${getDisplayValue(3)}
+
+          ${getDisplayValue(4)}   ${getDisplayValue(5)}   ${getDisplayValue(6)}
+
+          ${getDisplayValue(7)}   ${getDisplayValue(8)}   ${getDisplayValue(9)}
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    """.trimIndent()
+  )
+
+private fun GameState.displayWinner(): Either<Fault, Unit> =
+  if (ended) {
+    displayBoard()
+    val msg = if (winner != null) "${winner.getName()} won the game! Congratulations!" else "It's a Tie!"
+    println("\n--------------------------------\nMatch Result: ${msg}\n--------------------------------\n").right()
+  } else Fault("err-cannot-display-winner-game-not-ended-yet", FaultType.SYSTEM).left()
+
+// --- Game Play ---
+
+/**
+ * the following method will parse user input and process selection
+ * in the case of failure; it will retry (until successful)
+ */
+private fun GameState.processInputAndExecuteTurn(input: String): GameState =
+  parseInput(input).flatMap { executeTurn(this, it) }
+    .fold({ processInputAndExecuteTurn(promptInput("Err! Invalid Input. Please re-enter valid input")) }, { it })
+
+private fun GameState.nextTurn(): GameState {
+  displayBoard()
+  println(">>> ${player.getName()}'s Turn <<<")
+  val input = promptInput("Please enter value from 1-9 as per the availability on the board")
+  return processInputAndExecuteTurn(input)
 }
 
-fun getDisplayValue(game: GameState, tileNumber: Int): String =
-  getValue(game = game, tileNumber)?.let { getSymbol(it) } ?: DEFAULT_TILES[tileNumber - 1]
+fun GameState.start(): Either<Fault, GameState> =
+  either.eager {
+    // initiate the 1st turn and keep on taking a the next turn until game ends
+    // when game ends display the winner
+
+    var game = nextTurn()
+    while (!game.ended) game = game.nextTurn()
+    game.apply { displayWinner().bind() }
+  }
 
