@@ -19,7 +19,7 @@ class TestGame {
   fun testGameWinner() {
     val result =
       either.eager<Fault, GameState> {
-        initGame()
+        initGame(playingAgainstComputer = false)
           .let { executeTurn(it, 1).bind() }
           .let { executeTurn(it, 2).bind() }
           .let { executeTurn(it, 3).bind() }
@@ -44,7 +44,7 @@ class TestGame {
   fun testTie() {
     val result =
       either.eager<Fault, GameState> {
-        initGame()
+        initGame(playingAgainstComputer = false)
           .let { executeTurn(it, 5).bind() } // x
           .let { executeTurn(it, 1).bind() } // o
           .let { executeTurn(it, 2).bind() } // x

@@ -1,3 +1,5 @@
+@file:Suppress("ComplexRedundantLet")
+
 package com.tagtech.ttt
 
 import arrow.core.Either
@@ -10,8 +12,8 @@ private val log = LoggerFactory.getLogger("TicTacToe")
 
 // --- events ---
 
-fun initGame(): GameState {
-  val game = GameState()
+fun initGame(playingAgainstComputer: Boolean): GameState {
+  val game = GameState(vsComputer = playingAgainstComputer)
 
   val events = game._events.toMutableList()
   events.add(Event(EventType.INIT, null, null))
@@ -36,6 +38,14 @@ fun makeMove(game: GameState, move: Move): GameState {
   return game.copy(board = newBoard, _events = events)
 }
 
+fun playComputerTurn(game: GameState): GameState {
+  val move = getComputerMove(game)
+  val newBoard = updateBoard(game.board, move)!! // could lead to a runtime err.. impl `Either`
+  val events = game._events.toMutableList()
+  events.add(Event(EventType.UPDATE_BOARD, move, null))
+  return game.copy(board = newBoard, _events = events)
+}
+
 fun endGame(game: GameState, isTie: Boolean): GameState {
   val events = game._events.toMutableList()
   val winner = if (isTie) null else game.player
@@ -48,12 +58,9 @@ fun endGame(game: GameState, isTie: Boolean): GameState {
 fun executeTurn(game: GameState, inputTileSelection: Int): Either<Fault, GameState> =
   either.eager {
     validateInput(game, inputTileSelection).bind()
-    val newGameState = makeMove(game, Move(inputTileSelection, game.player))
-    when {
-      checkForTheWinner(newGameState) -> endGame(newGameState, isTie = false)
-      getNoOfMovesLeft(newGameState) == 0 -> endGame(newGameState, isTie = true)
-      else -> switchPlayer(newGameState)
-    }
+    makeMove(game, Move(inputTileSelection, game.player))
+      .let { endGameOrSwitchUser(it) }
+      .let { if (it.vsComputer) playComputerTurn(it).let { g -> endGameOrSwitchUser(g) } else it }
   }
 
 // --- utils ---
@@ -88,3 +95,12 @@ fun updateBoard(board: BoardState, move: Move): BoardState? =
     9 -> board.copy(i = move.player)
     else -> null
   }
+
+fun endGameOrSwitchUser(game: GameState) =
+  when {
+    checkForTheWinner(game) -> endGame(game, isTie = false)
+    getNoOfMovesLeft(game) == 0 -> endGame(game, isTie = true)
+    else -> switchPlayer(game)
+  }
+
+fun getComputerMove(game: GameState): Move = TODO()

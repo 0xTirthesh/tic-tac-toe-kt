@@ -63,6 +63,7 @@ data class Event(val type: EventType, val move: Move?, val winner: Player?) {
 
 data class GameState(
   val board: BoardState = EMPTY_BOARD,
+  val vsComputer: Boolean,
   val player: Player = PlayerCross,
   val ended: Boolean = false,
   val winner: Player? = null,
@@ -74,6 +75,7 @@ data class GameState(
     Game State:
     ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     Board: ${board}
+    v/s Computer?: ${if (vsComputer) "Yes" else "No"}
     Current Player: ${player}
     Winner: ${winner?.getName() ?: "-"}
     Ended: ${if (ended) "Yes" else "No"}

@@ -1,8 +1,10 @@
 import com.tagtech.ttt.initGame
 import com.tagtech.ttt.start
 
-fun main() {
-  val message = """
+@ExperimentalStdlibApi
+fun main(args: Array<String>) {
+  println(
+    """
     Welcome! Let's Play `TicTacToe`
 
     Rules:
@@ -12,10 +14,12 @@ fun main() {
      - When all 9 squares are full, the game is over.
 
   """.trimIndent()
+  )
 
-  println(message)
+  val vsComputer = args.isNotEmpty() && (args[0]).lowercase() == "play-vs-computer"
 
-  initGame()
+  initGame(vsComputer)
+    .apply { println(this) }
     .start()
     .fold({ println("Game Execution Failed. Message: ${it.message} | ErrType: ${it.type}") }) { println(it) }
 }
