@@ -25,7 +25,7 @@ private fun parseInput(input: String): Either<Fault, Int> =
 // --- GameState ---
 
 private fun GameState.getDisplayValue(tileNumber: Int): String =
-  getPlayerAtTile(tileNumber)?.getSymbol() ?: " ${tileNumber} "
+  getPlayerAtTile(this, tileNumber)?.getSymbol() ?: " ${tileNumber} "
 
 private fun GameState.displayBoard() =
   println(

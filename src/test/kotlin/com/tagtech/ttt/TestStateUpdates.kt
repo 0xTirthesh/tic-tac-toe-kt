@@ -6,6 +6,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class TestStateUpdates {
 
@@ -88,5 +89,41 @@ class TestStateUpdates {
     )
 
     assertEquals(expectedGame, updatedGame)
+  }
+
+  @Test
+  fun testBoardTilePosition() {
+    val game = GameState(
+      board = BoardState(PlayerOhh, PlayerCross, PlayerOhh, PlayerCross, PlayerOhh, PlayerCross, PlayerOhh, null, null)
+    )
+
+    assertEquals(PlayerOhh, getPlayerAtTile(game, 1))
+    assertEquals(PlayerCross, getPlayerAtTile(game, 2))
+    assertEquals(PlayerOhh, getPlayerAtTile(game, 3))
+    assertEquals(PlayerCross, getPlayerAtTile(game, 4))
+    assertEquals(PlayerOhh, getPlayerAtTile(game, 5))
+    assertEquals(PlayerCross, getPlayerAtTile(game, 6))
+    assertEquals(PlayerOhh, getPlayerAtTile(game, 7))
+    assertEquals(null, getPlayerAtTile(game, 8))
+    assertEquals(null, getPlayerAtTile(game, 9))
+  }
+
+  @Test
+  fun testValidation() {
+    val game = initGame()
+    val updatedGame = executeTurn(game, 1)
+
+    updatedGame.fold({ fail("Err! ${it.message}") }) {
+      validateInput(it, 1)
+        .apply { assertTrue(isLeft()) }
+        .let { e -> e.fold({ err -> assertEquals(FaultType.INVALID_INPUT, err.type) }, {}) }
+
+      validateInput(it, 99)
+        .apply { assertTrue(isLeft()) }
+        .let { e -> e.fold({ err -> assertEquals(FaultType.INVALID_INPUT, err.type) }, {}) }
+
+      validateInput(it, 5)
+        .apply { assertTrue(isRight()) }
+    }
   }
 }

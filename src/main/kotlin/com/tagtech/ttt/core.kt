@@ -3,7 +3,8 @@ package com.tagtech.ttt
 import arrow.core.Tuple9
 
 val EMPTY_MAP = mapOf<String, Any>()
-val EMPTY_BOARD: BoardState = Tuple9(null, null, null, null, null, null, null, null, null)
+
+// --- Player ---
 
 sealed class Player {
 
@@ -25,6 +26,8 @@ fun Player.getName() =
     is PlayerOhh -> "Player 2"
   }
 
+// --- Fault ---
+
 enum class FaultType {
   SYSTEM,
   INVALID_INPUT,
@@ -37,6 +40,8 @@ data class Fault(
   val args: Map<String, Any> = EMPTY_MAP,
   val ex: Throwable? = null
 )
+
+// --- Fault ---
 
 enum class EventType {
   INIT,
@@ -53,6 +58,8 @@ data class Event(val type: EventType, val move: Move?, val winner: Player?) {
       .let { if (winner != null) it + " | ${winner.getName()} (${winner.getSymbol()}) is the winner!" else it }
 
 }
+
+// --- GameState ---
 
 data class GameState(
   val board: BoardState = EMPTY_BOARD,
@@ -77,12 +84,18 @@ data class GameState(
     """
 }
 
+// --- Move ---
+
 data class Move(val tileNumber: Int, val player: Player) {
 
   override fun toString() = "'${player.getName()}' marked tile #${tileNumber} with ${player.getSymbol()}"
 }
 
+// --- BoardState ---
+
 typealias BoardState = Tuple9<Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?>
+
+val EMPTY_BOARD: BoardState = Tuple9(null, null, null, null, null, null, null, null, null)
 
 fun BoardState.getEndGameValidatorSequence() =
   listOf(
@@ -97,3 +110,4 @@ fun BoardState.getEndGameValidatorSequence() =
   )
 
 fun BoardState.getAllTiles() = listOf(a, b, c, d, e, f, g, h, i)
+

@@ -58,11 +58,11 @@ fun executeTurn(game: GameState, inputTileSelection: Int): Either<Fault, GameSta
 
 // --- utils ---
 
-fun GameState.getPlayerAtTile(tileNumber: Int): Player? = board.getAllTiles()[tileNumber - 1]
+fun getPlayerAtTile(game: GameState, tileNumber: Int): Player? = game.board.getAllTiles()[tileNumber - 1]
 
 fun validateInput(game: GameState, inputTileSelection: Int): Either<Fault, Unit> =
   if (inputTileSelection in 1..9) {
-    val player = game.getPlayerAtTile(inputTileSelection)
+    val player = getPlayerAtTile(game, inputTileSelection)
     if (player != null) Fault("err-invalid-move", FaultType.INVALID_INPUT).left()
     else Unit.right()
   } else Fault("err-invalid-tile-selected", FaultType.INVALID_INPUT).left()
