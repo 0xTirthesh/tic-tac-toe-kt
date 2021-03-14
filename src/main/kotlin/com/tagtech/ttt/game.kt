@@ -40,6 +40,7 @@ fun makeMove(game: GameState, move: Move): GameState {
 
 fun playComputerTurn(game: GameState): GameState {
   val move = getComputerMove(game)
+  log.debug("Executing Computers' Turn; Selected Tile: ${move.tileNumber}")
   val newBoard = updateBoard(game.board, move)!! // could lead to a runtime err.. impl `Either`
   val events = game._events.toMutableList()
   events.add(Event(EventType.UPDATE_BOARD, move, null))
@@ -57,10 +58,11 @@ fun endGame(game: GameState, isTie: Boolean): GameState {
 
 fun executeTurn(game: GameState, inputTileSelection: Int): Either<Fault, GameState> =
   either.eager {
+    log.debug("Executing Players' Turn; Selected Tile: ${inputTileSelection}")
     validateInput(game, inputTileSelection).bind()
     makeMove(game, Move(inputTileSelection, game.player))
       .let { endGameOrSwitchUser(it) }
-      .let { if (it.vsComputer) playComputerTurn(it).let { g -> endGameOrSwitchUser(g) } else it }
+      .let { if (!it.ended && it.vsComputer) playComputerTurn(it).let { g -> endGameOrSwitchUser(g) } else it }
   }
 
 // --- utils ---
@@ -103,4 +105,11 @@ fun endGameOrSwitchUser(game: GameState) =
     else -> switchPlayer(game)
   }
 
-fun getComputerMove(game: GameState): Move = TODO()
+fun getAvailableTiles(game: GameState): List<Int> =
+  game.board
+    .apply { log.debug(this.toString()) }
+    .getAllTiles().withIndex().filter { it.value == null }.map { it.index + 1 }
+    .apply { log.debug(this.toString()) }
+
+fun getComputerMove(game: GameState): Move = Move(getAvailableTiles(game).random(), game.player)
+
