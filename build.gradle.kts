@@ -16,6 +16,11 @@ repositories {
 
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
+  api("org.jetbrains.kotlinx", "kotlinx-coroutines-core", "1.3.5")
+  // do not remove this dependency; for some 3rd party JAVA based implementation lib this is required
+  api("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", "1.3.5")
+
+  api("ch.qos.logback", "logback-classic", "1.2.3")
 
   "0.11.0".let {
     api("io.arrow-kt", "arrow-core", it)

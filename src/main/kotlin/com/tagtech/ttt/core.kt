@@ -3,13 +3,30 @@ package com.tagtech.ttt
 import arrow.core.Tuple9
 
 val EMPTY_MAP = mapOf<String, Any>()
-val EMPTY_BOARD: BoardState = Tuple9(null, null, null, null, null, null, null, null, null)
 
-sealed class Player
-object Cross : Player()
-object Ohh : Player()
+// --- Player ---
 
-typealias BoardState = Tuple9<Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?>
+sealed class Player {
+
+  override fun toString(): String = getSymbol()
+
+  fun getSymbol() =
+    when (this) {
+      is PlayerCross -> " ❌ "
+      is PlayerOhh -> " ⭕ "
+    }
+}
+
+object PlayerCross : Player()
+object PlayerOhh : Player()
+
+fun Player.getName() =
+  when (this) {
+    is PlayerCross -> "Player 1"
+    is PlayerOhh -> "Player 2"
+  }
+
+// --- Fault ---
 
 enum class FaultType {
   SYSTEM,
@@ -24,6 +41,8 @@ data class Fault(
   val ex: Throwable? = null
 )
 
+// --- Fault ---
+
 enum class EventType {
   INIT,
   UPDATE_BOARD,
@@ -35,14 +54,22 @@ data class Event(val type: EventType, val move: Move?, val winner: Player?) {
 
   override fun toString(): String =
     " - ${type}"
-      .let { if (move != null) it + " | ${move}" else it }
-      .let { if (winner != null) it + " | ${winner.getName()} (${winner.getSymbol()}) is the winner!" else it }
-
+      .let { if (move != null) "${it} | ${move}" else it }
+      .let {
+        if (type == EventType.GAME_END) {
+          if (winner != null) "${it} | ${winner.getName()} (${winner.getSymbol()}) is the winner!"
+          else "${it} | No player won the game. It's a tie!"
+        } else it
+      }
 }
+
+// --- GameState ---
 
 data class GameState(
   val board: BoardState = EMPTY_BOARD,
-  val player: Player = Cross,
+  val vsComputer: Boolean,
+  val computerPlaysRandom: Boolean?,
+  val player: Player = PlayerCross,
   val ended: Boolean = false,
   val winner: Player? = null,
   val _events: List<Event> = listOf(),
@@ -50,23 +77,33 @@ data class GameState(
 
   override fun toString(): String =
     """
+    Game State:
+    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Board: ${board}
+    v/s Computer?: ${if (vsComputer) "Yes" else "No"}
+    Game Mode: ${if (computerPlaysRandom == true) "Random" else "Smart"}
+    Current Player: ${player}
+    Winner: ${winner?.getName() ?: "-"}
+    Ended: ${if (ended) "Yes" else "No"}
+    Events:
+    ${_events.joinToString(separator = "\n\t")}
+    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-      Game State:
-      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      Board: ${board}
-      Winner: ${winner?.getName() ?: "-"}
-      Ended: ${if (ended) "Yes" else "No"}
-      Events:
-        ${_events.joinToString(separator = "\n")}
-      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    """.trimIndent()
+    """
 }
+
+// --- Move ---
 
 data class Move(val tileNumber: Int, val player: Player) {
 
-  override fun toString() = "${player.getName()} marked tile #${tileNumber} with ${player.getSymbol()}"
+  override fun toString() = "'${player.getName()}' marked tile #${tileNumber} with ${player.getSymbol()}"
 }
+
+// --- BoardState ---
+
+typealias BoardState = Tuple9<Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?, Player?>
+
+val EMPTY_BOARD: BoardState = Tuple9(null, null, null, null, null, null, null, null, null)
 
 fun BoardState.getEndGameValidatorSequence() =
   listOf(
@@ -81,3 +118,14 @@ fun BoardState.getEndGameValidatorSequence() =
   )
 
 fun BoardState.getAllTiles() = listOf(a, b, c, d, e, f, g, h, i)
+
+val WINNING_COMBINATIONS = listOf(
+  "R1" to listOf(1, 2, 3),
+  "R2" to listOf(4, 5, 6),
+  "R3" to listOf(7, 8, 9),
+  "C1" to listOf(1, 4, 7),
+  "C2" to listOf(2, 5, 6),
+  "C3" to listOf(7, 8, 9),
+  "D1" to listOf(1, 5, 9),
+  "D2" to listOf(3, 5, 7)
+)

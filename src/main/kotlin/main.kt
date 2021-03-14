@@ -1,28 +1,26 @@
-import arrow.core.computations.either
-import com.tagtech.ttt.Fault
-import com.tagtech.ttt.GameState
-import com.tagtech.ttt.displayBoard
-import com.tagtech.ttt.displayWelcomeMessage
-import com.tagtech.ttt.displayWinner
-import com.tagtech.ttt.getName
 import com.tagtech.ttt.initGame
-import com.tagtech.ttt.playTurn
-import com.tagtech.ttt.promptInput
+import com.tagtech.ttt.start
 
-private fun play(game: GameState): GameState {
-  displayBoard(game)
-  println(">>> ${game.player.getName()}'s Turn <<<")
-  val input = promptInput("Please enter value from 1-9 as per the availability on the board")
-  return with(playTurn(game, input)) { if (ended) game else play(game) }
-}
+@ExperimentalStdlibApi
+fun main(args: Array<String>) {
+  println(
+    """
+    Welcome! Let's Play `TicTacToe`
 
-fun main() {
-  displayWelcomeMessage()
-  val result =
-    either.eager<Fault, GameState> {
-      val game = initGame()
-      play(game).apply { displayWinner(this).bind() }
-    }
+    Rules:
+     - Game will prompt for the player's turn. Player 1 marks '{CROSS}' and Player 2 marks '{OH}'
+     - Player will have to choose the number from the board they wish to mark.
+     - The first player to get 3 of their marks in a row (up, down, across, or diagonally) is the winner.
+     - When all 9 squares are full, the game is over.
 
-  result.fold({ println("Game Execution Failed. Message: ${it.message} | ErrType: ${it.type}") }) { println(it) }
+  """.trimIndent()
+  )
+
+  val vsComputer = args.isNotEmpty() && (args[0]).lowercase() == "play-vs-computer"
+  val computerPlaysRandom = vsComputer && args.size > 1 && (args[1]).lowercase() != "hard"
+
+  initGame(vsComputer, computerPlaysRandom)
+    .apply { println(this) }
+    .start()
+    .fold({ println("Game Execution Failed. Message: ${it.message} | ErrType: ${it.type}") }) { println(it) }
 }
