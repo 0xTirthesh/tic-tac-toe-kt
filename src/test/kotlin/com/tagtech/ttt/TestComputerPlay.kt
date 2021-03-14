@@ -28,8 +28,7 @@ class TestComputerPlay {
       println("\n--------------- #${it} ---------------\n")
       val newGame = initGame(playingAgainstComputer = true)
       getAvailableTiles(newGame).apply { assertEquals(9, size) }
-      val gameEnded = playAgainstComputer(newGame, 1)
-      assertTrue(gameEnded.ended)
+      playAgainstComputer(newGame, 1).apply { assertTrue(ended) }.let(::println)
     }
   }
 }

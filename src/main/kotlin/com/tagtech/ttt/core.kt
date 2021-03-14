@@ -54,9 +54,13 @@ data class Event(val type: EventType, val move: Move?, val winner: Player?) {
 
   override fun toString(): String =
     " - ${type}"
-      .let { if (move != null) it + " | ${move}" else it }
-      .let { if (winner != null) it + " | ${winner.getName()} (${winner.getSymbol()}) is the winner!" else it }
-
+      .let { if (move != null) "${it} | ${move}" else it }
+      .let {
+        if (type == EventType.GAME_END) {
+          if (winner != null) "${it} | ${winner.getName()} (${winner.getSymbol()}) is the winner!"
+          else "${it} | No player won the game. It's a tie!"
+        } else it
+      }
 }
 
 // --- GameState ---
